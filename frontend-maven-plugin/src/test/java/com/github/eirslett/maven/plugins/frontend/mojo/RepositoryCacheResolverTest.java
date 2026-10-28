@@ -2,6 +2,10 @@ package com.github.eirslett.maven.plugins.frontend.mojo;
 
 import com.github.eirslett.maven.plugins.frontend.lib.CacheDescriptor;
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
+import org.eclipse.aether.internal.impl.DefaultLocalPathPrefixComposerFactory;
+import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
+import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -81,6 +85,28 @@ public class RepositoryCacheResolverTest {
     assertEquals(tail.resolve(npmPath).toFile(), resolved);
   }
 
+  @Test
+  public void returnsTailArchiveWithMavensDefaultLocalRepositoryManager() throws Exception {
+    Path primary = temp.resolve("primary");
+    Path tail = temp.resolve("tail");
+    createArchive(tail);
+    LocalRepositoryManager chained =
+        new ChainedLocalRepositoryManager(enhancedManager(primary), singletonList(enhancedManager(tail)), true);
+
+    File resolved = resolverFor(chained).resolve(NODE);
+
+    assertEquals(tail.resolve(NODE_PATH).toFile(), resolved);
+  }
+
+  @Test
+  public void returnsPrimaryPathWithMavensDefaultLocalRepositoryManagerAndNoTail() throws Exception {
+    Path primary = temp.resolve("primary");
+
+    File resolved = resolverFor(enhancedManager(primary)).resolve(NODE);
+
+    assertEquals(primary.resolve(NODE_PATH).toFile(), resolved);
+  }
+
   private static void createArchive(Path repository) throws IOException {
     Path archive = repository.resolve(NODE_PATH);
     Files.createDirectories(archive.getParent());
@@ -89,6 +115,13 @@ public class RepositoryCacheResolverTest {
 
   private static LocalRepositoryManager manager(Path basedir) throws NoLocalRepositoryManagerException {
     return new SimpleLocalRepositoryManagerFactory()
+        .newInstance(new DefaultRepositorySystemSession(), new LocalRepository(basedir.toFile()));
+  }
+
+  /** The local repository manager Maven 3.9 uses by default. */
+  private static LocalRepositoryManager enhancedManager(Path basedir) throws NoLocalRepositoryManagerException {
+    return new EnhancedLocalRepositoryManagerFactory(
+        new DefaultLocalPathComposer(), new DefaultTrackingFileManager(), new DefaultLocalPathPrefixComposerFactory())
         .newInstance(new DefaultRepositorySystemSession(), new LocalRepository(basedir.toFile()));
   }
 

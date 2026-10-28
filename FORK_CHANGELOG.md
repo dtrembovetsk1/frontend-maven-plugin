@@ -9,11 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 - [POSSUM-475]: Added `incrementalWorkingDirectory` so incremental digests can use a narrower scope without changing the process working directory.
 
-### Changed
-- [CCDX-2713]: Node, npm, Yarn and other downloaded archives are now reused from a chained local repository (`maven.repo.local.tail`) when the primary local repository does not have them, instead of being downloaded again.
-
 ### Fixed
 - [POSSUM-475]: Trigger directories are now searched recursively as documented.
+- [CCDX-2713]: Node, npm, Yarn and other downloaded archives are now reused from a chained local repository (`maven.repo.local.tail`) when the primary local repository does not have them, instead of being downloaded again.
 
 ## [1.15.4-atlassian-1] - 2026-07-17
 
